@@ -1,0 +1,15 @@
+
+inicializar projeto sequelize:
+    npx sequelize-cli init
+
+criar um model+migration:
+    npx sequelize-cli model:create --name Pessoas --attributes nome:string,ativo:boolean,email:string,role:string
+
+rodar migrations criadas:
+    npx sequelize-cli db:migrate
+
+criar um seed:
+    npx sequelize-cli seed:generate --name demo-pessoa
+
+rodar todas as seeds:
+    npx sequelize-cli db:seed:all
