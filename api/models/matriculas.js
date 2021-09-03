@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     status: DataTypes.STRING
   }, {
     sequelize,
+    paranoid: true, // configurando paranoid como true, estamos garantindo que todos os delete deste model serao soft delete
     modelName: 'Matriculas',
   });
   return Matriculas;

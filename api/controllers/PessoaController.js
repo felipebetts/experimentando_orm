@@ -1,9 +1,24 @@
-const database = require('../models')
+// const database = require('../models')
+// const Sequelize = require('sequelize')
+
+const { PessoasServices } = require('../services')
+const pessoasServices = new PessoasServices('Pessoas')
 
 class PessoaController {
+    static async pegaPessoasAtivas(req, res) {
+        try {
+            const pessoasAtivas = await pessoasServices.pegaRegistrosAtivos()
+            return res.status(200).json(pessoasAtivas)
+        } catch (error) {
+            return res.status(500).json(error.message)            
+        }
+    }
+
+
     static async pegaTodasAsPessoas(req, res) {
         try {
-            const todasAsPessoas = await database.Pessoas.findAll()
+            // abaixo usamos o scope all ao inves do defaultScope
+            const todasAsPessoas = await pessoasServices.pegaTodosOsRegistros()
             return res.status(200).json(todasAsPessoas)
         } catch (error) {
             return res.status(500).json(error.message)            
@@ -14,11 +29,7 @@ class PessoaController {
         try {
             const { id } = req.params
 
-            const pessoa = await database.Pessoas.findOne({
-                where: {
-                    id: Number(id)
-                }
-            })
+            const pessoa = await pessoasServices.pegaUmRegistro(id)
             return res.json(pessoa)
         } catch (error) {
             return res.status(500).json(error.message)
@@ -28,7 +39,7 @@ class PessoaController {
     static async criarPessoa(req, res) {
         try {
             const dadosPessoa = req.body
-            const pessoa = await database.Pessoas.create(dadosPessoa)
+            const pessoa = await pessoasServices.criaRegistro(dadosPessoa)
             return res.status(201).json(pessoa)
         } catch (error) {
             return res.status(500).json(error.message)
@@ -40,17 +51,9 @@ class PessoaController {
             const { id } = req.params
             const novasInfos = req.body
             
-            await database.Pessoas.update(novasInfos, {
-                where: {
-                    id: Number(id)
-                }
-            })
+            await pessoasServices.atualizaRegistro(novasInfos, id)
 
-            const pessoaAtualizada = await database.Pessoas.findOne({
-                where: {
-                    id: Number(id)
-                }
-            })
+            const pessoaAtualizada = pessoasServices.pegaUmRegistro(id)
 
             return res.json(pessoaAtualizada)
 
@@ -62,78 +65,34 @@ class PessoaController {
     static async apagarPessoa(req, res) {
         try {
             const { id } = req.params
-            await database.Pessoas.destroy({
-                where: {
-                    id: Number(id)
-                }
-            })
+            await pessoasServices.apagaRegistro(id)
             return res.status(204).end()
         } catch (error) {
             return res.status(500).json(error.message)
         }
     }
-
-    static async pegarMatriculaPorId (req, res) {
+    
+    static async restaurarPessoa(req, res) {
         try {
-            const { estudanteId, matriculaId } = req.params
-            const matricula = await database.Matriculas.findOne({
-                where: {
-                    id: Number(matriculaId),
-                    estudante_id: Number(estudanteId)
-                }
-            })
+            // agora que implementamos o soft delete, temos que ter uma forma de restaurar itens deletados
+            const { id } = req.params
+            await pessoasServices.restauraPessoa(id)
 
-            return res.json(matricula)
+            return res.json({ message: `Pessoa com id: ${id} foi restaurada`})
         } catch (error) {
             return res.status(500).json(error.message)
         }
     }
 
-    static async criarMatricula(req, res) {
+    // controllers de matriculas:
+
+    static async cancelarPessoa(req, res) {
         try {
             const { estudanteId } = req.params
-            const dadosMatricula = { ...req.body, estudante_id: Number(estudanteId)}
-            const matricula = await database.Matriculas.create(dadosMatricula)
-            return res.status(201).json(matricula)
-        } catch (error) {
-            return res.status(500).json(error.message)
-        }
-    }
 
-    static async atualizarMatricula(req, res) {
-        try {
-            const { estudanteId, matriculaId } = req.params
-            const novasInfos = req.body
+            await pessoasServices.cancelaPessoaEMatriculas(Number(estudanteId))
             
-            await database.Matriculas.update(novasInfos, {
-                where: {
-                    id: Number(matriculaId),
-                    estudante_id: Number(estudanteId)
-                }
-            })
-
-            const matriculaAtualizada = await database.Matriculas.findOne({
-                where: {
-                    id: Number(matriculaId)
-                }
-            })
-
-            return res.json(matriculaAtualizada)
-
-        } catch (error) {
-            return res.status(500).json(error.message)
-        }
-    }
-
-    static async apagarMatricula(req, res) {
-        try {
-            const { estudanteId, matriculaId } = req.params
-            await database.Matriculas.destroy({
-                where: {
-                    id: Number(matriculaId)
-                }
-            })
-            return res.status(204).end()
+            return res.json({ message: `Matrículas do estudante ${estudanteId} canceladas.`})
         } catch (error) {
             return res.status(500).json(error.message)
         }

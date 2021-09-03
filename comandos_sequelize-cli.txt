@@ -13,3 +13,7 @@ criar um seed:
 
 rodar todas as seeds:
     npx sequelize-cli db:seed:all
+
+
+criar uma migration simples vazia:
+    npx sequelize-cli migration:generate --name add-deletedAt-column
